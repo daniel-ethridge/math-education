@@ -1,39 +1,66 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+import { Alert } from 'react-native';
+import { ThemeProvider } from './context/theme-context';
+import { router } from 'expo-router';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
+    <ThemeProvider>
+      <Stack
+        screenListeners={{
+          beforeRemove: (e) => {
+            if (e.target?.includes('mental-math-game')) {
+              e.preventDefault();
+              Alert.alert(
+                'Exit Game',
+                'Are you sure you want to exit? Your progress will be lost.',
+                [
+                  { text: 'Cancel', style: 'cancel', onPress: () => {} },
+                  { 
+                    text: 'Exit', 
+                    style: 'destructive', 
+                    onPress: () => {
+                      // Navigate back to the Mental Math main screen
+                      router.push('/(tabs)/mental-math');
+                    }
+                  },
+                ]
+              );
+            }
+          },
+        }}
+      >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="mental-math/number-select"
+          options={{
+            presentation: 'card',
+            title: 'Select Number',
+          }}
+        />
+        <Stack.Screen
+          name="mental-math/mental-math-settings"
+          options={{
+            presentation: 'card',
+            title: 'Game Settings',
+          }}
+        />
+        <Stack.Screen
+          name="mental-math/mental-math-game"
+          options={{
+            presentation: 'card',
+            title: 'Mental Math Game',
+          }}
+        />
+        <Stack.Screen
+          name="app-settings/app-settings"
+          options={{
+            presentation: 'card',
+            title: 'App Settings',
+          }}
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar style="auto" />
     </ThemeProvider>
   );
 }
